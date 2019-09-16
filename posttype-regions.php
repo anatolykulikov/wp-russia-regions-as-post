@@ -40,15 +40,16 @@ function region_post_init() {
 ================================================= */
 add_action('add_meta_boxes', 'metakey_region_fields', 1);
 
-function metakey_region_fields() {
-	add_meta_box( 'metabox', 'Параметры', 'ext_region_fields_box_func', 'region', 'normal', 'high');
-}
-// код блока
-function ext_region_fields_box_func( $post ){
-?>
-<textarea class="hidden" id="regioncode" name="ext_region[regioncode]" required ><?php echo get_post_meta($post->ID, 'regioncode', 1); ?></textarea>
-<input type="hidden" name="ext_region_fields_nonce" value="<?php echo wp_create_nonce(__FILE__); ?>" />
-<?php }
+	function metakey_region_fields() {
+		add_meta_box( 'metabox', '', 'ext_region_fields_box_func', 'region', 'normal', 'low');
+	}
+	// код блока
+	function ext_region_fields_box_func( $post ){
+		if(current_user_can('administrator')) { // Только администратор может редактировать код
+	?>
+	<input type="number" class="hidden" id="regioncode" name="ext_region[regioncode]" required disabled value='<?php echo get_post_meta($post->ID, 'regioncode'); ?>' />		   
+	<input type="hidden" name="ext_region_fields_nonce" value="<?php echo wp_create_nonce(__FILE__); ?>" />
+<?php }}
 
 // включаем обновление полей при сохранении
 add_action('save_post', 'metakey_region_fields_update', 0);
@@ -56,19 +57,25 @@ add_action('save_post', 'metakey_region_fields_update', 0);
 function metakey_region_fields_update( $post_id ){
 	if ( !wp_verify_nonce($_POST['ext_region_fields_nonce'], __FILE__) ) return false; // проверка
 	if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE  ) return false; // если это автосохранение
-	if ( !current_user_can('edit_post', $post_id) ) return false; // если юзер не имеет право редактировать запись
+	if ( !current_user_can('edit_post', $post_id) || !current_user_can('administrator') ) return false; // если юзер не имеет право редактировать запись
 
 	if( !isset($_POST['ext_region']) ) return false; 
 
 	// Все ОК! Теперь, нужно сохранить/удалить данные
-	$_POST['ext_region'] = array_region('trim', $_POST['ext_region']);
+	$_POST['ext_region'] = array_map('trim', $_POST['ext_region']);
 	foreach( $_POST['ext_region'] as $key=>$value ){
 		if( empty($value) ){
 			delete_post_meta($post_id, $key); // удаляем поле если значение пустое
 			continue;
 		}
-
-		update_post_meta($post_id, $key, $value); // add_post_meta() работает автоматически
+		if ($key) {
+            update_post_meta($post_id, $key, intval($value)); // Приводим номер региона к числу
+        } else {
+			// @petrozavodsky
+            // А тут оставлю на случай если может еще что то захочется сохранить
+            // update_post_meta($post_id, $key, $value);
+            // о валидации $value в этой секции надо позаботиться отдельно
+         }
 	}
 	return $post_id;
 }
