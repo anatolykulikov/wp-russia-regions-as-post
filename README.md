@@ -6,6 +6,10 @@
 
 Благодарю [@petrozavodsky](https://github.com/petrozavodsky) и [@soulseekah](https://github.com/soulseekah) за код-ревью и фиксы кода.
 
+## Плагин для Wordpress
+
+Также запилен [плагин для Wordpress](https://github.com/petrozavodsky/wp-russia-regions-as-post-plugin), выводящий всю эту красоту шорткодами и имеющий несколько плюшек в настройке и отображении.
+
 ## Порядок установки
 1. Подключите к `functions.php` файл `posttype-regions.php` (или скопируйте всё его содержимое).
 2. Импортируйте данные из файла `regions_data.xml` на ваш сайт (Инструменты -> Импорт -> Wordpress).
